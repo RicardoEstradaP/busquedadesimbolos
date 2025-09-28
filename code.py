@@ -3,12 +3,12 @@ import random
 import time
 
 # -------------------------
-# CONFIGURACIÓN DE PÁGINA
+# CONFIGURACIÓN
 # -------------------------
-st.set_page_config(page_title="Búsqueda de Símbolos", page_icon="🔍", layout="centered")
+st.set_page_config(page_title="Búsqueda de Símbolos - WAIS IV", layout="centered")
 
 # -------------------------
-# CONSTANTES Y VARIABLES
+# CONSTANTES
 # -------------------------
 SIMBOLOS = ['⊕', '⊖', '⊥', '⊃', '↻', '↷', '⊓', '⊔', '⊞', '⊠',
             '⊢', '⊣', '⊤', '⊨', '⊩', '⊬', '⊭', '⊯', '⊲', '⊳']
@@ -16,14 +16,16 @@ NUM_REACTIVOS = 10
 TIEMPO_LIMITE = 120  # segundos
 
 # -------------------------
-# INICIALIZACIÓN
+# ESTADO INICIAL
 # -------------------------
 if "inicio" not in st.session_state:
     st.session_state.inicio = time.time()
     st.session_state.intento = 0
     st.session_state.correctos = 0
     st.session_state.reactivo = None
-    st.session_state.seleccion_usuario = []
+    st.session_state.seleccion_usuario = set()
+    st.session_state.feedback = ""
+    st.session_state.validado = False
 
 # -------------------------
 # FUNCIONES
@@ -31,32 +33,44 @@ if "inicio" not in st.session_state:
 def generar_reactivo():
     objetivos = random.sample(SIMBOLOS, 2)
     busqueda = random.sample(SIMBOLOS, 5)
+    presentes = [s for s in objetivos if s in busqueda]
     return {
         "objetivo": objetivos,
-        "busqueda": busqueda
+        "busqueda": busqueda,
+        "presentes": presentes  # puede ser 0, 1 o 2 símbolos
     }
 
 def validar_respuesta():
     seleccion = st.session_state.seleccion_usuario
-    objetivos = st.session_state.reactivo["objetivo"]
-    busqueda = st.session_state.reactivo["busqueda"]
+    presentes = set(st.session_state.reactivo["presentes"])
 
-    # El usuario debe haber seleccionado solo 1 o 0 símbolos (como en el test real)
-    if len(seleccion) > 1:
-        return False  # Se penaliza la selección múltiple
-    elif len(seleccion) == 0 and not any(o in busqueda for o in objetivos):
-        return True
-    elif len(seleccion) == 1 and seleccion[0] in objetivos and seleccion[0] in busqueda:
-        return True
+    if not seleccion and not presentes:
+        resultado = True
+        mensaje = "✔️ Correcto. Ninguno de los símbolos estaba presente."
+    elif seleccion == presentes:
+        resultado = True
+        mensaje = f"✔️ Correcto. Seleccionaste exactamente los símbolos presentes: {' '.join(presentes)}"
     else:
-        return False
+        resultado = False
+        if not presentes:
+            mensaje = "❌ Incorrecto. No debiste seleccionar ningún símbolo."
+        else:
+            mensaje = f"❌ Incorrecto. Debías seleccionar: {' '.join(presentes) if presentes else 'ninguno'}"
+    return resultado, mensaje
+
+def manejar_validacion():
+    correcto, mensaje = validar_respuesta()
+    if correcto:
+        st.session_state.correctos += 1
+    st.session_state.feedback = mensaje
+    st.session_state.validado = True
 
 def manejar_siguiente():
-    if validar_respuesta():
-        st.session_state.correctos += 1
     st.session_state.intento += 1
     st.session_state.reactivo = generar_reactivo()
-    st.session_state.seleccion_usuario = []
+    st.session_state.seleccion_usuario = set()
+    st.session_state.feedback = ""
+    st.session_state.validado = False
 
 # -------------------------
 # TIEMPO RESTANTE
@@ -67,8 +81,6 @@ tiempo_restante = TIEMPO_LIMITE - int(time.time() - st.session_state.inicio)
 # CABECERA
 # -------------------------
 st.title("🔍 Búsqueda de Símbolos - WAIS IV Simulado")
-st.markdown("Selecciona el símbolo que aparece en la fila de búsqueda. Si no aparece ninguno, deja sin seleccionar y presiona **Validar**.")
-
 st.warning(f"⏱️ Tiempo restante: {tiempo_restante} segundos")
 
 # -------------------------
@@ -76,7 +88,7 @@ st.warning(f"⏱️ Tiempo restante: {tiempo_restante} segundos")
 # -------------------------
 if tiempo_restante <= 0 or st.session_state.intento >= NUM_REACTIVOS:
     st.success(f"Juego terminado. Aciertos: {st.session_state.correctos} de {NUM_REACTIVOS}")
-    if st.button("🔄 Reiniciar juego"):
+    if st.button("🔄 Reiniciar"):
         st.session_state.clear()
 
 # -------------------------
@@ -87,18 +99,40 @@ else:
         st.session_state.reactivo = generar_reactivo()
 
     reactivo = st.session_state.reactivo
+    objetivos = reactivo["objetivo"]
+    busqueda = reactivo["busqueda"]
 
     st.markdown(f"### Reactivo {st.session_state.intento + 1}")
-    st.markdown("#### Símbolos Objetivo:")
-    st.markdown(f"<div style='font-size: 48px; text-align: center;'>{'  '.join(reactivo['objetivo'])}</div>", unsafe_allow_html=True)
+    st.markdown("#### Símbolos objetivo:")
+    st.markdown(
+        f"<div style='font-size: 48px; text-align: center;'>{'  '.join(objetivos)}</div>",
+        unsafe_allow_html=True,
+    )
 
-    st.markdown("#### Símbolos de Búsqueda:")
+    st.markdown("#### Selecciona los símbolos que aparecen en la fila:")
     cols = st.columns(5)
-    for idx, simbolo in enumerate(reactivo["busqueda"]):
-        if cols[idx].button(f"{simbolo}", key=f"simbolo_{idx}"):
-            st.session_state.seleccion_usuario = [simbolo]  # Solo una selección permitida
+    for i, simbolo in enumerate(busqueda):
+        if simbolo in st.session_state.seleccion_usuario:
+            if cols[i].button(f"✅ {simbolo}", key=f"select_{i}"):
+                st.session_state.seleccion_usuario.remove(simbolo)
+        else:
+            if cols[i].button(f"{simbolo}", key=f"select_{i}"):
+                st.session_state.seleccion_usuario.add(simbolo)
 
-    st.markdown("----")
-    st.markdown("¿Ya terminaste tu selección?")
-    if st.button("✅ Validar"):
-        manejar_siguiente()
+    st.markdown("#### O marca si **ninguno aparece**:")
+    if st.button("🚫 Ninguno aparece"):
+        st.session_state.seleccion_usuario = set()
+
+    # Botón de validación
+    if not st.session_state.validado:
+        if st.button("✅ Validar respuesta"):
+            manejar_validacion()
+
+    # Retroalimentación
+    if st.session_state.feedback:
+        st.info(st.session_state.feedback)
+
+    # Siguiente
+    if st.session_state.validado:
+        if st.button("➡️ Siguiente"):
+            manejar_siguiente()
