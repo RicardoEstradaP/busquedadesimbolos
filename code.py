@@ -24,6 +24,7 @@ if "inicio" not in st.session_state:
     st.session_state.correctos = 0
     st.session_state.reactivo = None
     st.session_state.seleccion_usuario = set()
+    st.session_state.ninguno_seleccionado = False
     st.session_state.feedback = ""
     st.session_state.validado = False
 
@@ -69,6 +70,7 @@ def manejar_siguiente():
     st.session_state.intento += 1
     st.session_state.reactivo = generar_reactivo()
     st.session_state.seleccion_usuario = set()
+    st.session_state.ninguno_seleccionado = False
     st.session_state.feedback = ""
     st.session_state.validado = False
 
@@ -120,6 +122,7 @@ else:
                     st.session_state.seleccion_usuario.remove(simbolo)
                 else:
                     st.session_state.seleccion_usuario.add(simbolo)
+                st.session_state.ninguno_seleccionado = False  # Desmarcar "ninguno" si se selecciona un símbolo
                 st.rerun()  # Forzar actualización inmediata
             
             # Aplicar estilo visual basado en el estado de selección
@@ -132,17 +135,15 @@ else:
 
     st.markdown("#### O marca si **ninguno aparece**:")
     
-    # Verificar si "ninguno" está seleccionado (cuando no hay símbolos seleccionados)
-    ninguno_seleccionado = len(st.session_state.seleccion_usuario) == 0
-    
     if st.button("🚫 Ninguno aparece"):
         st.session_state.seleccion_usuario = set()
+        st.session_state.ninguno_seleccionado = True
         st.rerun()  # Forzar actualización inmediata
     
     # Mostrar el botón con estilo visual
     estilo_ninguno = (
         "background-color: #d4f4dd; padding: 12px 16px; border-radius: 8px; border: 2px solid #4CAF50; box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3); text-align: center; margin-top: 8px;"
-        if ninguno_seleccionado else
+        if st.session_state.ninguno_seleccionado else
         "background-color: #f0f0f0; padding: 12px 16px; border-radius: 8px; border: 2px solid #ccc; text-align: center; margin-top: 8px;"
     )
     st.markdown(f"<div style='{estilo_ninguno}'>🚫 Ninguno aparece</div>", unsafe_allow_html=True)
