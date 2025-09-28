@@ -82,7 +82,6 @@ tiempo_restante = TIEMPO_LIMITE - int(time.time() - st.session_state.inicio)
 # -------------------------
 st.title("🔍 Búsqueda de Símbolos - WAIS IV Simulado")
 st.markdown("Selecciona los símbolos que aparecen en la fila de búsqueda. Si ninguno aparece, marca la opción correspondiente. Luego presiona **Validar** para recibir retroalimentación.")
-
 st.warning(f"⏱️ Tiempo restante: {tiempo_restante} segundos")
 
 # -------------------------
@@ -115,12 +114,18 @@ else:
     cols = st.columns(5)
     for i, simbolo in enumerate(busqueda):
         marcado = simbolo in st.session_state.seleccion_usuario
-        label = f"✅ {simbolo}" if marcado else simbolo
-        if cols[i].button(label, key=f"simbolo_{i}"):
-            if marcado:
-                st.session_state.seleccion_usuario.remove(simbolo)
-            else:
-                st.session_state.seleccion_usuario.add(simbolo)
+        estilo = (
+            "background-color: #d4f4dd; padding: 12px 16px; border-radius: 8px; font-size: 32px; border: 2px solid #4CAF50;"
+            if marcado else
+            "background-color: #f0f0f0; padding: 12px 16px; border-radius: 8px; font-size: 32px; border: 2px solid #ccc;"
+        )
+        with cols[i]:
+            if st.button(simbolo, key=f"simbolo_{i}"):
+                if marcado:
+                    st.session_state.seleccion_usuario.remove(simbolo)
+                else:
+                    st.session_state.seleccion_usuario.add(simbolo)
+            st.markdown(f"<div style='{estilo}; text-align:center'>{simbolo}</div>", unsafe_allow_html=True)
 
     st.markdown("#### O marca si **ninguno aparece**:")
     if st.button("🚫 Ninguno aparece"):
