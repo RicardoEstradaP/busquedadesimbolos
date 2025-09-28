@@ -271,11 +271,7 @@ else:
     if not st.session_state.validado:
         if st.button("✅ Validar respuesta"):
             manejar_validacion()
-            st.rerun()
-
-    # Botón siguiente (solo aparece después de validar)
-    if st.session_state.validado:
-        if st.button("➡️ Siguiente"):
+            # Automáticamente pasar al siguiente reactivo después de validar
             manejar_siguiente()
             st.rerun()
     
