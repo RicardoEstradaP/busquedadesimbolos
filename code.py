@@ -34,23 +34,29 @@ if "inicio" not in st.session_state:
 # -------------------------
 def generar_reactivo():
     objetivos = random.sample(SIMBOLOS, 2)
-    busqueda = random.sample(SIMBOLOS, 5)
     
     # Decidir aleatoriamente cuántos símbolos objetivos aparecerán (0, 1 o 2)
     num_presentes = random.choice([0, 1, 2])
     
     if num_presentes == 0:
         presentes = []
+        # Generar 5 símbolos aleatorios que NO sean los objetivos
+        simbolos_disponibles = [s for s in SIMBOLOS if s not in objetivos]
+        busqueda = random.sample(simbolos_disponibles, 5)
     elif num_presentes == 1:
         presentes = [random.choice(objetivos)]
+        # Generar 4 símbolos aleatorios + 1 objetivo
+        simbolos_disponibles = [s for s in SIMBOLOS if s not in objetivos]
+        otros_simbolos = random.sample(simbolos_disponibles, 4)
+        busqueda = otros_simbolos + presentes
+        random.shuffle(busqueda)  # Mezclar para que no esté siempre al final
     else:  # num_presentes == 2
         presentes = objetivos.copy()
-    
-    # Asegurar que los símbolos presentes estén en la fila de búsqueda
-    for simbolo in presentes:
-        if simbolo not in busqueda:
-            # Reemplazar un símbolo aleatorio en busqueda con el objetivo
-            busqueda[random.randint(0, 4)] = simbolo
+        # Generar 3 símbolos aleatorios + 2 objetivos
+        simbolos_disponibles = [s for s in SIMBOLOS if s not in objetivos]
+        otros_simbolos = random.sample(simbolos_disponibles, 3)
+        busqueda = otros_simbolos + presentes
+        random.shuffle(busqueda)  # Mezclar para que no estén siempre al final
     
     return {
         "objetivo": objetivos,
