@@ -27,6 +27,7 @@ if "inicio" not in st.session_state:
     st.session_state.ninguno_seleccionado = False
     st.session_state.feedback = ""
     st.session_state.validado = False
+    st.session_state.juego_iniciado = False
 
 # -------------------------
 # FUNCIONES
@@ -89,6 +90,40 @@ def manejar_siguiente():
     st.session_state.ninguno_seleccionado = False
     st.session_state.feedback = ""
     st.session_state.validado = False
+
+# -------------------------
+# PANTALLA DE INSTRUCCIONES
+# -------------------------
+if not st.session_state.juego_iniciado:
+    st.title("🔍 Búsqueda de Símbolos - WAIS IV Simulado")
+    
+    st.markdown("""
+    <div style="background-color: #f0f8ff; padding: 30px; border-radius: 15px; border: 2px solid #4CAF50; margin: 20px 0;">
+        <h2 style="color: #2c3e50; text-align: center; margin-bottom: 25px;">📋 Instrucciones</h2>
+        <p style="font-size: 18px; line-height: 1.6; color: #34495e;">
+            <strong>En esta tarea, vas a ver dos símbolos aquí a la izquierda. Luego, verás un grupo de cinco símbolos. 
+            Tu trabajo consiste en ver si uno de los dos símbolos de la izquierda aparece en el grupo de cinco símbolos de la derecha.</strong>
+        </p>
+        <br>
+        <p style="font-size: 18px; line-height: 1.6; color: #34495e;">
+            <strong>Si uno de los símbolos aparece, selecciona el símbolo correspondiente. Si ninguno aparece, selecciona "Ninguno aparece". 
+            Hazlo lo más rápido que puedas sin cometer errores.</strong>
+        </p>
+        <br>
+        <p style="font-size: 20px; text-align: center; color: #e74c3c; font-weight: bold;">
+            ¿Está claro?
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("🚀 ¡Comenzar!", key="iniciar_juego", use_container_width=True):
+            st.session_state.juego_iniciado = True
+            st.session_state.inicio = time.time()  # Reiniciar el tiempo cuando comience el juego
+            st.rerun()
+    
+    st.stop()  # Detener la ejecución aquí hasta que se inicie el juego
 
 # -------------------------
 # TIEMPO RESTANTE
@@ -203,8 +238,8 @@ else:
     if st.session_state.feedback:
         st.info(st.session_state.feedback)
 
-    # Botón siguiente
-    if st.session_state.validado:
+    # Botón siguiente (solo aparece después de validar y mostrar feedback)
+    if st.session_state.validado and st.session_state.feedback:
         if st.button("➡️ Siguiente"):
             manejar_siguiente()
             st.rerun()
