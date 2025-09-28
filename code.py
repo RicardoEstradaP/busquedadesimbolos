@@ -12,7 +12,7 @@ st.set_page_config(page_title="Búsqueda de Símbolos - WAIS IV", layout="center
 # -------------------------
 SIMBOLOS = ['⊕', '⊖', '⊥', '⊃', '↻', '↷', '⊓', '⊔', '⊞', '⊠',
             '⊢', '⊣', '⊤', '⊨', '⊩', '⊬', '⊭', '⊯', '◀', '▶']
-NUM_REACTIVOS = 10
+NUM_REACTIVOS = 30
 TIEMPO_LIMITE = 120  # segundos totales del juego
 
 # -------------------------
