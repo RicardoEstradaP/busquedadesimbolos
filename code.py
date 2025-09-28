@@ -5,59 +5,83 @@ import time
 # -------------------------
 # CONFIGURACIÓN DE PÁGINA
 # -------------------------
-st.set_page_config(page_title="Juego de Búsqueda de Símbolos", page_icon="🔍", layout="centered")
+st.set_page_config(page_title="Búsqueda de Símbolos", page_icon="🔍", layout="centered")
 
 # -------------------------
 # CONSTANTES Y VARIABLES
 # -------------------------
-SIMBOLOS = ['★', '●', '▲', '■', '◆', '☂', '✿', '♣', '☀', '♠']
+SIMBOLOS = ['⊕', '⊖', '⊥', '⊃', '↻', '↷', '⊓', '⊔', '⊞', '⊠',
+            '⊢', '⊣', '⊤', '⊨', '⊩', '⊬', '⊭', '⊯', '⊲', '⊳']
 NUM_REACTIVOS = 10
 TIEMPO_LIMITE = 120  # segundos
 
 # -------------------------
-# INICIALIZACIÓN DE ESTADO
+# INICIALIZACIÓN
 # -------------------------
 if "inicio" not in st.session_state:
     st.session_state.inicio = time.time()
     st.session_state.intento = 0
     st.session_state.correctos = 0
     st.session_state.reactivo = None
+    st.session_state.seleccion_usuario = []
 
 # -------------------------
-# FUNCIONES DEL JUEGO
+# FUNCIONES
 # -------------------------
 def generar_reactivo():
-    simbolos_objetivo = random.sample(SIMBOLOS, 2)
-    simbolos_busqueda = random.sample(SIMBOLOS, 5)
-    hay_objetivo = any(s in simbolos_busqueda for s in simbolos_objetivo)
+    objetivos = random.sample(SIMBOLOS, 2)
+    busqueda = random.sample(SIMBOLOS, 5)
     return {
-        "objetivo": simbolos_objetivo,
-        "busqueda": simbolos_busqueda,
-        "es_correcto": hay_objetivo
+        "objetivo": objetivos,
+        "busqueda": busqueda
     }
 
-def manejar_respuesta(respuesta_usuario):
-    reactivo = st.session_state.reactivo
-    if (respuesta_usuario and reactivo["es_correcto"]) or (not respuesta_usuario and not reactivo["es_correcto"]):
+def validar_respuesta():
+    seleccion = st.session_state.seleccion_usuario
+    objetivos = st.session_state.reactivo["objetivo"]
+    busqueda = st.session_state.reactivo["busqueda"]
+
+    # El usuario debe haber seleccionado solo 1 o 0 símbolos (como en el test real)
+    if len(seleccion) > 1:
+        return False  # Se penaliza la selección múltiple
+    elif len(seleccion) == 0 and not any(o in busqueda for o in objetivos):
+        return True
+    elif len(seleccion) == 1 and seleccion[0] in objetivos and seleccion[0] in busqueda:
+        return True
+    else:
+        return False
+
+def manejar_siguiente():
+    if validar_respuesta():
         st.session_state.correctos += 1
     st.session_state.intento += 1
     st.session_state.reactivo = generar_reactivo()
+    st.session_state.seleccion_usuario = []
 
 # -------------------------
-# JUEGO EN CURSO
+# TIEMPO RESTANTE
 # -------------------------
-st.title("🔍 Juego de Búsqueda de Símbolos")
-st.markdown("Responde si alguno de los símbolos objetivo aparece en el grupo de búsqueda.")
-
-# Verificar tiempo restante
 tiempo_restante = TIEMPO_LIMITE - int(time.time() - st.session_state.inicio)
+
+# -------------------------
+# CABECERA
+# -------------------------
+st.title("🔍 Búsqueda de Símbolos - WAIS IV Simulado")
+st.markdown("Selecciona el símbolo que aparece en la fila de búsqueda. Si no aparece ninguno, deja sin seleccionar y presiona **Validar**.")
+
 st.warning(f"⏱️ Tiempo restante: {tiempo_restante} segundos")
 
-# Fin del juego
+# -------------------------
+# FINAL DEL JUEGO
+# -------------------------
 if tiempo_restante <= 0 or st.session_state.intento >= NUM_REACTIVOS:
     st.success(f"Juego terminado. Aciertos: {st.session_state.correctos} de {NUM_REACTIVOS}")
     if st.button("🔄 Reiniciar juego"):
         st.session_state.clear()
+
+# -------------------------
+# JUEGO EN CURSO
+# -------------------------
 else:
     if st.session_state.reactivo is None:
         st.session_state.reactivo = generar_reactivo()
@@ -65,14 +89,16 @@ else:
     reactivo = st.session_state.reactivo
 
     st.markdown(f"### Reactivo {st.session_state.intento + 1}")
-    st.markdown(f"**Símbolos objetivo:** {reactivo['objetivo'][0]}  {reactivo['objetivo'][1]}")
-    st.markdown(f"**Símbolos de búsqueda:** {'  '.join(reactivo['busqueda'])}")
+    st.markdown("#### Símbolos Objetivo:")
+    st.markdown(f"<div style='font-size: 48px; text-align: center;'>{'  '.join(reactivo['objetivo'])}</div>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("✅ Sí, aparece"):
-            manejar_respuesta(True)
+    st.markdown("#### Símbolos de Búsqueda:")
+    cols = st.columns(5)
+    for idx, simbolo in enumerate(reactivo["busqueda"]):
+        if cols[idx].button(f"{simbolo}", key=f"simbolo_{idx}"):
+            st.session_state.seleccion_usuario = [simbolo]  # Solo una selección permitida
 
-    with col2:
-        if st.button("❌ No aparece"):
-            manejar_respuesta(False)
+    st.markdown("----")
+    st.markdown("¿Ya terminaste tu selección?")
+    if st.button("✅ Validar"):
+        manejar_siguiente()
