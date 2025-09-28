@@ -27,6 +27,7 @@ if "inicio" not in st.session_state:
     st.session_state.ninguno_seleccionado = False
     st.session_state.feedback = ""
     st.session_state.validado = False
+    st.session_state.tiempo_validacion = None
 
 # -------------------------
 # FUNCIONES
@@ -65,6 +66,7 @@ def manejar_validacion():
         st.session_state.correctos += 1
     st.session_state.feedback = mensaje
     st.session_state.validado = True
+    st.session_state.tiempo_validacion = time.time()
 
 def manejar_siguiente():
     st.session_state.intento += 1
@@ -73,6 +75,7 @@ def manejar_siguiente():
     st.session_state.ninguno_seleccionado = False
     st.session_state.feedback = ""
     st.session_state.validado = False
+    st.session_state.tiempo_validacion = None
 
 # -------------------------
 # TIEMPO RESTANTE
@@ -117,6 +120,18 @@ else:
     for i, simbolo in enumerate(busqueda):
         marcado = simbolo in st.session_state.seleccion_usuario
         with cols[i]:
+            # Aplicar estilo al botón directamente
+            if marcado:
+                st.markdown("""
+                <style>
+                div[data-testid="column"]:nth-of-type({}) button {{
+                    background-color: #d4f4dd !important;
+                    border: 2px solid #4CAF50 !important;
+                    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3) !important;
+                }}
+                </style>
+                """.format(i+1), unsafe_allow_html=True)
+            
             if st.button(simbolo, key=f"simbolo_{i}"):
                 if marcado:
                     st.session_state.seleccion_usuario.remove(simbolo)
@@ -124,40 +139,47 @@ else:
                     st.session_state.seleccion_usuario.add(simbolo)
                 st.session_state.ninguno_seleccionado = False  # Desmarcar "ninguno" si se selecciona un símbolo
                 st.rerun()  # Forzar actualización inmediata
-            
-            # Aplicar estilo visual basado en el estado de selección
-            estilo = (
-                "background-color: #d4f4dd; padding: 12px 16px; border-radius: 8px; font-size: 32px; border: 2px solid #4CAF50; box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);"
-                if marcado else
-                "background-color: #f0f0f0; padding: 12px 16px; border-radius: 8px; font-size: 32px; border: 2px solid #ccc;"
-            )
-            st.markdown(f"<div style='{estilo}; text-align:center; margin-top: 8px;'>{simbolo}</div>", unsafe_allow_html=True)
 
     st.markdown("#### O marca si **ninguno aparece**:")
+    
+    # Aplicar estilo al botón "Ninguno aparece" si está seleccionado
+    if st.session_state.ninguno_seleccionado:
+        st.markdown("""
+        <style>
+        button[kind="secondary"]:has-text("🚫 Ninguno aparece") {
+            background-color: #d4f4dd !important;
+            border: 2px solid #4CAF50 !important;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3) !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
     
     if st.button("🚫 Ninguno aparece"):
         st.session_state.seleccion_usuario = set()
         st.session_state.ninguno_seleccionado = True
         st.rerun()  # Forzar actualización inmediata
-    
-    # Mostrar el botón con estilo visual
-    estilo_ninguno = (
-        "background-color: #d4f4dd; padding: 12px 16px; border-radius: 8px; border: 2px solid #4CAF50; box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3); text-align: center; margin-top: 8px;"
-        if st.session_state.ninguno_seleccionado else
-        "background-color: #f0f0f0; padding: 12px 16px; border-radius: 8px; border: 2px solid #ccc; text-align: center; margin-top: 8px;"
-    )
-    st.markdown(f"<div style='{estilo_ninguno}'>🚫 Ninguno aparece</div>", unsafe_allow_html=True)
 
-    # Validar
+    # Validar automáticamente después de 2 segundos
+    if st.session_state.validado and st.session_state.tiempo_validacion:
+        tiempo_transcurrido = time.time() - st.session_state.tiempo_validacion
+        if tiempo_transcurrido >= 2:
+            manejar_siguiente()
+            st.rerun()
+        else:
+            tiempo_restante_validacion = 2 - tiempo_transcurrido
+            st.info(f"⏳ Cambiando al siguiente reactivo en {tiempo_restante_validacion:.1f} segundos...")
+    
+    # Botón de validación
     if not st.session_state.validado:
         if st.button("✅ Validar respuesta"):
             manejar_validacion()
+            st.rerun()
 
     # Retroalimentación
     if st.session_state.feedback:
         st.info(st.session_state.feedback)
-
-    # Siguiente
-    if st.session_state.validado:
-        if st.button("➡️ Siguiente"):
-            manejar_siguiente()
+    
+    # Auto-refresh para el temporizador
+    if st.session_state.validado and st.session_state.tiempo_validacion:
+        time.sleep(0.1)  # Pequeña pausa para evitar actualizaciones demasiado rápidas
+        st.rerun()
