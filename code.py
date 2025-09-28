@@ -13,7 +13,7 @@ st.set_page_config(page_title="Búsqueda de Símbolos - WAIS IV", layout="center
 SIMBOLOS = ['⊕', '⊖', '⊥', '⊃', '↻', '↷', '⊓', '⊔', '⊞', '⊠',
             '⊢', '⊣', '⊤', '⊨', '⊩', '⊬', '⊭', '⊯', '⊲', '⊳']
 NUM_REACTIVOS = 10
-TIEMPO_LIMITE = 120  # segundos totales del juego
+TIEMPO_LIMITE = 80  # segundos totales del juego
 
 # -------------------------
 # ESTADO INICIAL
@@ -100,7 +100,28 @@ tiempo_restante = TIEMPO_LIMITE - int(time.time() - st.session_state.inicio)
 # -------------------------
 st.title("🔍 Búsqueda de Símbolos - WAIS IV Simulado")
 st.markdown("Selecciona los símbolos que aparecen en la fila de búsqueda. Si ninguno aparece, marca la opción correspondiente. Luego presiona **Validar** para recibir retroalimentación.")
-st.warning(f"⏱️ Tiempo restante: {tiempo_restante} segundos")
+
+# Temporizador grande y en tiempo real
+if tiempo_restante > 0:
+    # Color del temporizador según el tiempo restante
+    if tiempo_restante <= 10:
+        color = "🔴"  # Rojo para los últimos 10 segundos
+    elif tiempo_restante <= 20:
+        color = "🟡"  # Amarillo para los últimos 20 segundos
+    else:
+        color = "🟢"  # Verde para el resto del tiempo
+    
+    st.markdown(f"""
+    <div style="text-align: center; font-size: 48px; font-weight: bold; margin: 20px 0; padding: 20px; border: 3px solid #333; border-radius: 15px; background-color: #f0f0f0;">
+        {color} {tiempo_restante} segundos
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <div style="text-align: center; font-size: 48px; font-weight: bold; margin: 20px 0; padding: 20px; border: 3px solid #ff0000; border-radius: 15px; background-color: #ffebee;">
+        ⏰ Tiempo agotado
+    </div>
+    """, unsafe_allow_html=True)
 
 # -------------------------
 # FIN DEL JUEGO
@@ -187,3 +208,8 @@ else:
         if st.button("➡️ Siguiente"):
             manejar_siguiente()
             st.rerun()
+    
+    # Auto-refresh para el temporizador (solo si el juego está en curso)
+    if tiempo_restante > 0 and st.session_state.intento < NUM_REACTIVOS:
+        time.sleep(1)  # Actualizar cada segundo
+        st.rerun()
