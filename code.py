@@ -3,17 +3,17 @@ import random
 import time
 
 # -------------------------
-# CONFIGURACIÓN
+# CONFIGURACIÓN GENERAL
 # -------------------------
 st.set_page_config(page_title="Búsqueda de Símbolos - WAIS IV", layout="centered")
 
 # -------------------------
-# CONSTANTES
+# CONSTANTES DEL JUEGO
 # -------------------------
 SIMBOLOS = ['⊕', '⊖', '⊥', '⊃', '↻', '↷', '⊓', '⊔', '⊞', '⊠',
             '⊢', '⊣', '⊤', '⊨', '⊩', '⊬', '⊭', '⊯', '⊲', '⊳']
 NUM_REACTIVOS = 10
-TIEMPO_LIMITE = 120  # segundos
+TIEMPO_LIMITE = 120  # segundos totales del juego
 
 # -------------------------
 # ESTADO INICIAL
@@ -78,16 +78,18 @@ def manejar_siguiente():
 tiempo_restante = TIEMPO_LIMITE - int(time.time() - st.session_state.inicio)
 
 # -------------------------
-# CABECERA
+# ENCABEZADO
 # -------------------------
 st.title("🔍 Búsqueda de Símbolos - WAIS IV Simulado")
+st.markdown("Selecciona los símbolos que aparecen en la fila de búsqueda. Si ninguno aparece, marca la opción correspondiente. Luego presiona **Validar** para recibir retroalimentación.")
+
 st.warning(f"⏱️ Tiempo restante: {tiempo_restante} segundos")
 
 # -------------------------
-# FINAL DEL JUEGO
+# FIN DEL JUEGO
 # -------------------------
 if tiempo_restante <= 0 or st.session_state.intento >= NUM_REACTIVOS:
-    st.success(f"Juego terminado. Aciertos: {st.session_state.correctos} de {NUM_REACTIVOS}")
+    st.success(f"🎯 Juego terminado. Aciertos: {st.session_state.correctos} de {NUM_REACTIVOS}")
     if st.button("🔄 Reiniciar"):
         st.session_state.clear()
 
@@ -109,21 +111,22 @@ else:
         unsafe_allow_html=True,
     )
 
-    st.markdown("#### Selecciona los símbolos que aparecen en la fila:")
+    st.markdown("#### Selecciona los símbolos que aparecen en la fila de búsqueda:")
     cols = st.columns(5)
     for i, simbolo in enumerate(busqueda):
-        if simbolo in st.session_state.seleccion_usuario:
-            if cols[i].button(f"✅ {simbolo}", key=f"select_{i}"):
+        marcado = simbolo in st.session_state.seleccion_usuario
+        label = f"✅ {simbolo}" if marcado else simbolo
+        if cols[i].button(label, key=f"simbolo_{i}"):
+            if marcado:
                 st.session_state.seleccion_usuario.remove(simbolo)
-        else:
-            if cols[i].button(f"{simbolo}", key=f"select_{i}"):
+            else:
                 st.session_state.seleccion_usuario.add(simbolo)
 
     st.markdown("#### O marca si **ninguno aparece**:")
     if st.button("🚫 Ninguno aparece"):
         st.session_state.seleccion_usuario = set()
 
-    # Botón de validación
+    # Validar
     if not st.session_state.validado:
         if st.button("✅ Validar respuesta"):
             manejar_validacion()
