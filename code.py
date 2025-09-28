@@ -27,7 +27,6 @@ if "inicio" not in st.session_state:
     st.session_state.ninguno_seleccionado = False
     st.session_state.feedback = ""
     st.session_state.validado = False
-    st.session_state.tiempo_validacion = None
 
 # -------------------------
 # FUNCIONES
@@ -35,11 +34,27 @@ if "inicio" not in st.session_state:
 def generar_reactivo():
     objetivos = random.sample(SIMBOLOS, 2)
     busqueda = random.sample(SIMBOLOS, 5)
-    presentes = [s for s in objetivos if s in busqueda]
+    
+    # Decidir aleatoriamente cuántos símbolos objetivos aparecerán (0, 1 o 2)
+    num_presentes = random.choice([0, 1, 2])
+    
+    if num_presentes == 0:
+        presentes = []
+    elif num_presentes == 1:
+        presentes = [random.choice(objetivos)]
+    else:  # num_presentes == 2
+        presentes = objetivos.copy()
+    
+    # Asegurar que los símbolos presentes estén en la fila de búsqueda
+    for simbolo in presentes:
+        if simbolo not in busqueda:
+            # Reemplazar un símbolo aleatorio en busqueda con el objetivo
+            busqueda[random.randint(0, 4)] = simbolo
+    
     return {
         "objetivo": objetivos,
         "busqueda": busqueda,
-        "presentes": presentes  # puede ser 0, 1 o 2 símbolos
+        "presentes": presentes
     }
 
 def validar_respuesta():
@@ -66,7 +81,6 @@ def manejar_validacion():
         st.session_state.correctos += 1
     st.session_state.feedback = mensaje
     st.session_state.validado = True
-    st.session_state.tiempo_validacion = time.time()
 
 def manejar_siguiente():
     st.session_state.intento += 1
@@ -75,7 +89,6 @@ def manejar_siguiente():
     st.session_state.ninguno_seleccionado = False
     st.session_state.feedback = ""
     st.session_state.validado = False
-    st.session_state.tiempo_validacion = None
 
 # -------------------------
 # TIEMPO RESTANTE
@@ -159,16 +172,6 @@ else:
         st.session_state.ninguno_seleccionado = True
         st.rerun()  # Forzar actualización inmediata
 
-    # Validar automáticamente después de 2 segundos
-    if st.session_state.validado and st.session_state.tiempo_validacion:
-        tiempo_transcurrido = time.time() - st.session_state.tiempo_validacion
-        if tiempo_transcurrido >= 2:
-            manejar_siguiente()
-            st.rerun()
-        else:
-            tiempo_restante_validacion = 2 - tiempo_transcurrido
-            st.info(f"⏳ Cambiando al siguiente reactivo en {tiempo_restante_validacion:.1f} segundos...")
-    
     # Botón de validación
     if not st.session_state.validado:
         if st.button("✅ Validar respuesta"):
@@ -178,8 +181,9 @@ else:
     # Retroalimentación
     if st.session_state.feedback:
         st.info(st.session_state.feedback)
-    
-    # Auto-refresh para el temporizador
-    if st.session_state.validado and st.session_state.tiempo_validacion:
-        time.sleep(0.1)  # Pequeña pausa para evitar actualizaciones demasiado rápidas
-        st.rerun()
+
+    # Botón siguiente
+    if st.session_state.validado:
+        if st.button("➡️ Siguiente"):
+            manejar_siguiente()
+            st.rerun()
