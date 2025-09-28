@@ -11,7 +11,7 @@ st.set_page_config(page_title="Búsqueda de Símbolos - WAIS IV", layout="center
 # CONSTANTES DEL JUEGO
 # -------------------------
 SIMBOLOS = ['⊕', '⊖', '⊥', '⊃', '↻', '↷', '⊓', '⊔', '⊞', '⊠',
-            '⊢', '⊣', '⊤', '⊨', '⊩', '⊬', '⊭', '⊯', '⊲', '⊳']
+            '⊢', '⊣', '⊤', '⊨', '⊩', '⊬', '⊭', '⊯', '◀', '▶']
 NUM_REACTIVOS = 10
 TIEMPO_LIMITE = 80  # segundos totales del juego
 
@@ -209,7 +209,10 @@ else:
             manejar_siguiente()
             st.rerun()
     
-    # Auto-refresh para el temporizador (solo si el juego está en curso)
-    if tiempo_restante > 0 and st.session_state.intento < NUM_REACTIVOS:
+    # Auto-refresh para el temporizador (solo si el juego está en curso y no hay validación pendiente)
+    if (tiempo_restante > 0 and 
+        st.session_state.intento < NUM_REACTIVOS and 
+        not st.session_state.validado and 
+        not st.session_state.feedback):
         time.sleep(1)  # Actualizar cada segundo
         st.rerun()
