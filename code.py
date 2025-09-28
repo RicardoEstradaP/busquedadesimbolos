@@ -131,9 +131,21 @@ else:
             st.markdown(f"<div style='{estilo}; text-align:center; margin-top: 8px;'>{simbolo}</div>", unsafe_allow_html=True)
 
     st.markdown("#### O marca si **ninguno aparece**:")
+    
+    # Verificar si "ninguno" está seleccionado (cuando no hay símbolos seleccionados)
+    ninguno_seleccionado = len(st.session_state.seleccion_usuario) == 0
+    
     if st.button("🚫 Ninguno aparece"):
         st.session_state.seleccion_usuario = set()
         st.rerun()  # Forzar actualización inmediata
+    
+    # Mostrar el botón con estilo visual
+    estilo_ninguno = (
+        "background-color: #d4f4dd; padding: 12px 16px; border-radius: 8px; border: 2px solid #4CAF50; box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3); text-align: center; margin-top: 8px;"
+        if ninguno_seleccionado else
+        "background-color: #f0f0f0; padding: 12px 16px; border-radius: 8px; border: 2px solid #ccc; text-align: center; margin-top: 8px;"
+    )
+    st.markdown(f"<div style='{estilo_ninguno}'>🚫 Ninguno aparece</div>", unsafe_allow_html=True)
 
     # Validar
     if not st.session_state.validado:
