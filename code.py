@@ -120,8 +120,8 @@ if not st.session_state.juego_iniciado:
     <div style="background-color: #f0f8ff; padding: 30px; border-radius: 15px; border: 2px solid #4CAF50; margin: 20px 0;">
         <h2 style="color: #2c3e50; text-align: center; margin-bottom: 25px;">📋 Instrucciones</h2>
         <p style="font-size: 18px; line-height: 1.6; color: #34495e;">
-            <strong>En esta tarea, vas a ver dos símbolos aquí a la izquierda. Luego, verás un grupo de cinco símbolos. 
-            Tu trabajo consiste en ver si uno de los dos símbolos de la izquierda aparece en el grupo de cinco símbolos de la derecha.</strong>
+            <strong>En esta tarea, vas a ver dos símbolos. Luego, debajo verás un grupo de cinco símbolos. 
+            Tu trabajo consiste en ver si alguno o ninguno de los dos símbolos superiores aparece en el grupo de cinco símbolos inferiores.</strong>
         </p>
         <br>
         <p style="font-size: 18px; line-height: 1.6; color: #34495e;">
@@ -153,7 +153,7 @@ tiempo_restante = TIEMPO_LIMITE - int(time.time() - st.session_state.inicio)
 # ENCABEZADO
 # -------------------------
 st.title("🔍 Búsqueda de Símbolos - WAIS IV Simulado")
-st.markdown("Selecciona los símbolos que aparecen en la fila de búsqueda. Si ninguno aparece, marca la opción correspondiente. Luego presiona **Validar** para recibir retroalimentación.")
+st.markdown("Selecciona los símbolos que aparecen en la fila de búsqueda. Si ninguno aparece, marca la opción correspondiente. Luego presiona **Validar** para cambiar al siguiente item.")
 
 # Temporizador grande y en tiempo real
 if tiempo_restante > 0:
