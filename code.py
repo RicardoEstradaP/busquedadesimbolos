@@ -28,6 +28,7 @@ if "inicio" not in st.session_state:
     st.session_state.feedback = ""
     st.session_state.validado = False
     st.session_state.juego_iniciado = False
+    st.session_state.resultados = []  # Para guardar los resultados de cada reactivo
 
 # -------------------------
 # FUNCIONES
@@ -86,7 +87,20 @@ def manejar_validacion():
     correcto, mensaje = validar_respuesta()
     if correcto:
         st.session_state.correctos += 1
-    st.session_state.feedback = mensaje
+    
+    # Guardar el resultado del reactivo actual
+    resultado_reactivo = {
+        "reactivo_num": st.session_state.intento + 1,
+        "objetivos": st.session_state.reactivo["objetivo"],
+        "busqueda": st.session_state.reactivo["busqueda"],
+        "presentes": st.session_state.reactivo["presentes"],
+        "seleccion_usuario": list(st.session_state.seleccion_usuario),
+        "ninguno_seleccionado": st.session_state.ninguno_seleccionado,
+        "correcto": correcto,
+        "mensaje": mensaje
+    }
+    st.session_state.resultados.append(resultado_reactivo)
+    
     st.session_state.validado = True
 
 def manejar_siguiente():
@@ -94,7 +108,6 @@ def manejar_siguiente():
     st.session_state.reactivo = generar_reactivo()
     st.session_state.seleccion_usuario = set()
     st.session_state.ninguno_seleccionado = False
-    st.session_state.feedback = ""
     st.session_state.validado = False
 
 # -------------------------
@@ -168,7 +181,27 @@ else:
 # FIN DEL JUEGO
 # -------------------------
 if tiempo_restante <= 0 or st.session_state.intento >= NUM_REACTIVOS:
-    st.success(f"🎯 Juego terminado. Aciertos: {st.session_state.correctos} de {NUM_REACTIVOS}")
+    st.success(f"🎯 Juego terminado. Aciertos: {st.session_state.correctos} de {st.session_state.intento}")
+    
+    # Mostrar resultados detallados
+    st.markdown("### 📊 Resultados Detallados")
+    
+    for resultado in st.session_state.resultados:
+        with st.expander(f"Reactivo {resultado['reactivo_num']} - {'✅ Correcto' if resultado['correcto'] else '❌ Incorrecto'}"):
+            st.markdown(f"**Símbolos objetivo:** {' '.join(resultado['objetivos'])}")
+            st.markdown(f"**Fila de búsqueda:** {' '.join(resultado['busqueda'])}")
+            st.markdown(f"**Símbolos presentes:** {' '.join(resultado['presentes']) if resultado['presentes'] else 'Ninguno'}")
+            
+            if resultado['ninguno_seleccionado']:
+                st.markdown(f"**Tu selección:** Ninguno aparece")
+            else:
+                st.markdown(f"**Tu selección:** {' '.join(resultado['seleccion_usuario']) if resultado['seleccion_usuario'] else 'Ninguno'}")
+            
+            if not resultado['correcto']:
+                st.error(f"**Error:** {resultado['mensaje']}")
+            else:
+                st.success("**¡Correcto!**")
+    
     if st.button("🔄 Reiniciar"):
         st.session_state.clear()
 
@@ -240,12 +273,8 @@ else:
             manejar_validacion()
             st.rerun()
 
-    # Retroalimentación (solo se muestra después de validar)
-    if st.session_state.validado and st.session_state.feedback:
-        st.info(st.session_state.feedback)
-
-    # Botón siguiente (solo aparece después de validar y mostrar feedback)
-    if st.session_state.validado and st.session_state.feedback:
+    # Botón siguiente (solo aparece después de validar)
+    if st.session_state.validado:
         if st.button("➡️ Siguiente"):
             manejar_siguiente()
             st.rerun()
