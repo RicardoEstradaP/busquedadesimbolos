@@ -13,7 +13,7 @@ st.set_page_config(page_title="Búsqueda de Símbolos - WAIS IV", layout="center
 SIMBOLOS = ['⊕', '⊖', '⊥', '⊃', '↻', '↷', '⊓', '⊔', '⊞', '⊠',
             '⊢', '⊣', '⊤', '⊨', '⊩', '⊬', '⊭', '⊯', '◀', '▶']
 NUM_REACTIVOS = 10
-TIEMPO_LIMITE = 80  # segundos totales del juego
+TIEMPO_LIMITE = 120  # segundos totales del juego
 
 # -------------------------
 # ESTADO INICIAL
@@ -234,8 +234,8 @@ else:
             manejar_validacion()
             st.rerun()
 
-    # Retroalimentación
-    if st.session_state.feedback:
+    # Retroalimentación (solo se muestra después de validar)
+    if st.session_state.validado and st.session_state.feedback:
         st.info(st.session_state.feedback)
 
     # Botón siguiente (solo aparece después de validar y mostrar feedback)
